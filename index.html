@@ -78,7 +78,11 @@ nav.shrink{padding-top:14px;padding-bottom:14px;background:rgba(8,6,3,.6);backdr
 .nav-links a::after{content:"";position:absolute;left:0;bottom:-5px;width:0;height:1.5px;background:linear-gradient(90deg,var(--gold),var(--gold-l));transition:.3s}
 .nav-links a:hover{color:var(--gold-l)}
 .nav-links a:hover::after{width:100%}
-@media(max-width:760px){.nav-links{display:none}}
+@media(max-width:760px){
+  .nav-links{gap:0}
+  .nav-links a:not(.navcv){display:none}
+  .nav-links .navcv{display:inline-flex;padding:9px 16px;border:1px solid var(--line);border-radius:30px;font-size:13px;background:rgba(232,183,91,.08)}
+}
 
 .wrap{position:relative;z-index:2;max-width:1180px;margin:0 auto;padding:0 clamp(20px,5vw,40px)}
 section{position:relative;z-index:2;padding:clamp(90px,14vh,160px) 0}
@@ -228,6 +232,44 @@ footer{position:relative;z-index:2;text-align:center;padding:42px 20px;border-to
 
 [data-rv]{opacity:0}
 #prog{position:fixed;top:0;left:0;height:2px;width:0;z-index:60;background:linear-gradient(90deg,var(--gold-d),var(--gold-l),var(--amber))}
+
+/* ---------------- MOBILE / RESPONSIVE ---------------- */
+@media(max-width:760px){
+  section{padding:64px 0}
+  .hero{min-height:auto;padding-top:96px;padding-bottom:30px}
+  .hero h1{font-size:clamp(52px,15vw,82px)}
+  .hero p.lede{font-size:15.5px}
+  .cta-row{gap:12px}
+  .btn{padding:14px 22px;font-size:14px}
+  .stats{gap:24px;margin-top:34px;flex-wrap:wrap}
+  .stat .n{font-size:30px}
+  .figure{width:min(360px,76vw)}
+  .photo-stage{padding:22px}
+  .marquee-track{font-size:20px;gap:34px}
+  .marquee-track span{gap:34px}
+  h2.head{font-size:clamp(30px,8vw,44px)}
+  .proj{padding:22px}
+  .proj .num{font-size:42px}
+  .soc{padding:13px 20px;font-size:13.5px}
+}
+@media(max-width:480px){
+  .hero h1{font-size:clamp(46px,16vw,66px)}
+  .hero .role{font-size:17px}
+  .stats{gap:16px}
+  .stat .n{font-size:26px}
+  .stat .l{font-size:10px;letter-spacing:1px}
+  .float-chip{display:none}
+  .hud .corner{width:32px;height:32px}
+  .figure{width:min(320px,80vw)}
+  .eyebrow{font-size:10px;letter-spacing:3px}
+  .links-row{gap:10px}
+  .soc{padding:12px 16px;font-size:13px}
+}
+/* honor users who ask for less motion */
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.001s!important;animation-iteration-count:1!important}
+  .cutout{animation:none}
+}
 </style>
 </head>
 <body>
@@ -264,7 +306,7 @@ footer{position:relative;z-index:2;text-align:center;padding:42px 20px;border-to
     <a href="#skills">Stack</a>
     <a href="#work">Work</a>
     <a href="#contact">Contact</a>
-    <a href="assets/resume.pdf" download style="color:var(--gold)">Resume ↓</a>
+    <a href="assets/resume.pdf" download class="navcv" style="color:var(--gold)">Resume ↓</a>
   </div>
 </nav>
 
@@ -498,9 +540,12 @@ function startReveal(){
 /* ===================== THREE.JS — GLOSSY GOLD CINEMATIC ===================== */
 (function(){
   if(!window.THREE)return;
+  const MOBILE=matchMedia('(max-width:760px)').matches||('ontouchstart' in window && innerWidth<900);
+  const REDUCE=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  if(REDUCE)return; // leave the warm-glow backdrop static
   const canvas=document.getElementById('bg-canvas');
-  const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
-  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:!MOBILE,powerPreference:'high-performance'});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,MOBILE?1.5:2));
   renderer.setSize(innerWidth,innerHeight);
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure=1.15;
@@ -540,14 +585,15 @@ function startReveal(){
   const goldMat2=new THREE.MeshStandardMaterial({color:0xe8b75b,metalness:1,roughness:.08,envMapIntensity:1.6});
 
   /* --- HERO: big glossy torus knot --- */
-  const knot=new THREE.Mesh(new THREE.TorusKnotGeometry(2.6,.72,220,40,2,3),goldMat);
+  const knot=new THREE.Mesh(new THREE.TorusKnotGeometry(2.6,.72,MOBILE?120:220,MOBILE?20:40,2,3),goldMat);
   knot.position.set(5.2,1.4,0);
   scene.add(knot);
 
   /* --- floating chrome-gold spheres --- */
   const spheres=[];
-  const sGeo=new THREE.SphereGeometry(1,48,48);
-  const defs=[[-6.5,2.6,-2,.9],[-4.5,-3.2,1,.55],[7.2,-3.6,-1,.7],[2.5,4.2,-3,.45],[-8,-.5,-4,.6]];
+  const sGeo=new THREE.SphereGeometry(1,MOBILE?28:48,MOBILE?28:48);
+  let defs=[[-6.5,2.6,-2,.9],[-4.5,-3.2,1,.55],[7.2,-3.6,-1,.7],[2.5,4.2,-3,.45],[-8,-.5,-4,.6]];
+  if(MOBILE)defs=defs.slice(0,3);
   defs.forEach(([x,y,z,s],i)=>{
     const m=new THREE.Mesh(sGeo,i%2?goldMat2:goldMat);
     m.position.set(x,y,z);m.scale.setScalar(s);
@@ -560,7 +606,7 @@ function startReveal(){
   crystal.position.set(-3,3.4,2);scene.add(crystal);
 
   /* --- gold dust particles --- */
-  const N=600,pg=new THREE.BufferGeometry(),pp=new Float32Array(N*3);
+  const N=MOBILE?240:600,pg=new THREE.BufferGeometry(),pp=new Float32Array(N*3);
   for(let i=0;i<N;i++){pp[i*3]=(Math.random()-.5)*44;pp[i*3+1]=(Math.random()-.5)*28;pp[i*3+2]=(Math.random()-.5)*24;}
   pg.setAttribute('position',new THREE.BufferAttribute(pp,3));
   const dust=new THREE.Points(pg,new THREE.PointsMaterial({color:0xffd98a,size:.05,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));
@@ -572,8 +618,13 @@ function startReveal(){
   let scrollT=0;
   addEventListener('scroll',()=>{scrollT=scrollY/(document.documentElement.scrollHeight-innerHeight||1);});
 
-  let t=0;
-  (function animate(){
+  let t=0,running=true;
+  document.addEventListener('visibilitychange',()=>{
+    const wasStopped=!running;running=!document.hidden;
+    if(running&&wasStopped)animate();
+  });
+  function animate(){
+    if(!running)return;
     requestAnimationFrame(animate);
     t+=.01;
     knot.rotation.x=t*.5;knot.rotation.y=t*.35;
@@ -589,7 +640,8 @@ function startReveal(){
     cam.position.z=15-scrollT*9;
     cam.lookAt(scrollT*2,scrollT* -1,0);
     renderer.render(scene,cam);
-  })();
+  }
+  animate();
 
   addEventListener('resize',()=>{
     cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();
